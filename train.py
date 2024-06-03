@@ -83,3 +83,7 @@ if __name__ == "__main__":
     )
     trainer.train()
     trainer.evaluate()
+
+    # Save model
+    sc_model.save_pretrained(args.dataset_path)
+    tokenizer.save_pretrained(args.dataset_path)
