@@ -24,7 +24,7 @@ if __name__ == "__main__":
     parser.add_argument(
         "--dataset_path",
         required=True,
-        help="Path to dataset (including trian and test csv files)",
+        help="Path to dataset (including train and test csv files)",
     )
     args = parser.parse_args()
 
