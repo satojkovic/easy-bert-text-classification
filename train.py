@@ -7,9 +7,7 @@ from sklearn.metrics import accuracy_score
 
 
 def tokenize(batch, tokenizer):
-    return tokenizer(
-        batch["text"], padding=True, truncation=True, max_length=512
-    )  # 受け取ったバッチからtextデータを取り出してtokenizerに入れる
+    return tokenizer(batch["text"], padding=True, truncation=True, max_length=512)
 
 
 def compute_metrics(result):
@@ -30,26 +28,28 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
+    # Loading pre-trained BERT models
     sc_model = BertForSequenceClassification.from_pretrained(
         "cl-tohoku/bert-base-japanese-whole-word-masking", num_labels=9
-    )  # 事前学習済みBERTモデルの読み込み
+    )
     sc_model.to(device="mps")  # Apple Silicon
+    # Load pre-trained BERT tokenizers
     tokenizer = BertJapaneseTokenizer.from_pretrained(
         "cl-tohoku/bert-base-japanese-whole-word-masking"
-    )  # 事前学習済みのBERTトークナイザーを読み込み
+    )
 
-    # CSVデータの読み込み #カラムの指定,#学習データとテストデータは事前に分割済みのためtrainを指定
+    # Importing CSV data
     train_data = load_dataset(
         "csv",
         data_files=os.path.join(args.dataset_path, "news_train.csv"),
         column_names=["text", "label"],
         split="train",
     )
-    # 単語ごとに分割する  #バッチサイズは学習データすべてを指定
+    # Split word by word
     train_data = train_data.map(
         lambda x: tokenize(x, tokenizer), batched=True, batch_size=len(train_data)
     )
-    # 学習データのフォーマット指定,Pytorchを指定,input_idsとlabelのカラムを指定
+    # Specify the format of the training data
     train_data.set_format("torch", columns=["input_ids", "label"])
 
     test_data = load_dataset(
@@ -69,8 +69,8 @@ if __name__ == "__main__":
         num_train_epochs=2,
         per_device_train_batch_size=8,
         per_device_eval_batch_size=32,
-        warmup_steps=500,  # 学習係数が0からこのステップ数で上昇
-        weight_decay=0.01,  # 重みの減衰率
+        warmup_steps=500,
+        weight_decay=0.01,
         logging_dir=os.path.join(args.dataset_path, "logs"),
         evaluation_strategy="steps",
     )
